@@ -1,0 +1,8 @@
+**/*.ts
+**/tsconfig.json
+**/appveyor.yml
+**/.gitignore
+.vscode/settings.json
+.vscode/tasks.json
+img/vscode-duktape-adapter.png
+duk-debug-0.1.0.vsix
