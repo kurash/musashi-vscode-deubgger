@@ -2,36 +2,28 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name"              : "Launch Extension",
-			"type"              : "extensionHost",
-			"request"           : "launch",
-			"runtimeExecutable" : "${execPath}",
-			"stopOnEntry"       : false,
-			"sourceMaps"        : true,
-			"outDir"            : "${workspaceRoot}/out",
-            
-            "preLaunchTask"     : "tsc",
-            
+			"name": "Run Extension",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}"
-			]
+			],
+			"sourceMaps": true,
+			"outDir": "${workspaceRoot}/out",
+			"preLaunchTask": "npm"
 		},
-        
-        
-        {
-            //"preLaunchTask"     : "tsc",
-            
-			"name"        : "DukDebug server",
-			"type"        : "node",
-			"request"     : "launch",
-			"runtimeArgs" : [ "--nolazy" ],
-			"program"     : "${workspaceRoot}/src/DukDebugger.ts",
-			"stopOnEntry" : false,
-			"args"        : [ "--server=4711" ],
-			"sourceMaps"  : true,
-			"outDir"      : "${workspaceRoot}/out",
-			"cwd"         : "${workspaceRoot}"
+		{
+			"name": "Run Server",
+			"type": "node",
+			"request": "launch",
+			"runtimeArgs": [ "--nolazy" ],
+			"program": "${workspaceRoot}/src/DukDebugger.ts",
+			"stopOnEntry": false,
+			"args": [ "--server=4711" ],
+			"sourceMaps": true,
+			"outDir": "${workspaceRoot}/out",
+			"cwd": "${workspaceRoot}"
 		}
-        
 	]
 }

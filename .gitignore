@@ -5,3 +5,4 @@ out/**
 ./out/**
 */bin/**
 */obj/**
+.DS_Store

@@ -181,19 +181,19 @@ export class DukBasicInfoResponse extends DukResponse
     public gitDesc    :string;
     public targetInfo :string;
     public endianness :DukEndianness;
-    
+
     constructor( msg:DukDvalueMsg )
     {
         super( Duk.CmdType.BASICINFO );
-        
-        if( msg.length != 6 )
-            throw new Error( "Invalid 'BasicInfo' response message." );
-        
+
+        if( msg.length < 5 )
+            throw new Error( "Invalid 'BasicInfo' response message." + msg.length + "..." );
+
         this.version    = <number>msg[1].value;
         this.gitDesc    = <string>msg[2].value;
         this.targetInfo = <string>msg[3].value;
         this.endianness = <DukEndianness>msg[4].value;
-        
+
         if( this.endianness < DukEndianness.Little ||
             this.endianness > DukEndianness.Big )
                 throw new Error( "Invalid endianness" );
@@ -368,11 +368,11 @@ export class DukInspectHeapObjResponse extends DukResponse
             prop.flags = <number>msg[i].value;
             prop.key   = <number|string>msg[i+1].value;
             prop.value = <any>msg[i+2].value;
-            
+
             this.properties[j] = prop;
         }
     }
-    
+
     public numInternalProps() : number
     {
         for( let i = 0; i < this.properties.length; i++ )
@@ -381,7 +381,7 @@ export class DukInspectHeapObjResponse extends DukResponse
             if( p.key == "h_size" )
                 return i+1;
         }
-        
+
         return this.properties.length;
     }
 }
@@ -441,7 +441,7 @@ export class DukGetClosureResponse extends DukResponse
         }
         else
             this.local = [];
-    
+
     }
 }
 
@@ -696,7 +696,7 @@ export class DukDbgProtocol extends EE.EventEmitter
     private _protoVersion   :string = null;
 
     private log:Function;
-    
+
     public  info:DukBasicInfoResponse;
 
     //-----------------------------------------------------------
@@ -730,7 +730,7 @@ export class DukDbgProtocol extends EE.EventEmitter
         this._dukSocket = new Net.Socket();
 
         // Check for timeout
-        var timeoutID:NodeJS.Timer = setTimeout( () => {
+        var timeoutID:number = setTimeout( () => {
 
             clearTimeout( timeoutID );
 
@@ -746,7 +746,7 @@ export class DukDbgProtocol extends EE.EventEmitter
 
 
         // On succesful connection
-        this._dukSocket.once( "connect", ( event:Event ) => {
+        this._dukSocket.once( "connect", ( event ) => {
 
             clearTimeout( timeoutID );
 
@@ -803,11 +803,11 @@ export class DukDbgProtocol extends EE.EventEmitter
 
         // Close the socket
         this._state = State.Offline;
-        
+
         this._dukSocket.end();
         this._dukSocket.destroy();
         this._dukSocket = null;
-        
+
         this.emit( DukEvent[DukEvent.disconnected], reason );
     }
 
@@ -817,7 +817,7 @@ export class DukDbgProtocol extends EE.EventEmitter
     {
         return this.sendSimpleRequest( Duk.CmdType.BASICINFO );
     }
-    
+
     //-----------------------------------------------------------
     public requestResume() : Promise<any>
     {
@@ -946,7 +946,7 @@ export class DukDbgProtocol extends EE.EventEmitter
         this._outBuf.writeInt( Duk.CmdType.GETCLOSURES );
         this._outBuf.writeInt( stackDepth );
         this._outBuf.writeEOM();
-        
+
         return this.sendRequest( Duk.CmdType.GETCLOSURES, this._outBuf.finish() );
     }
 
@@ -965,8 +965,6 @@ export class DukDbgProtocol extends EE.EventEmitter
     //-----------------------------------------------------------
     private sendRequest( cmd:number, buf:Buffer ) : Promise<any>
     {
-        assert( this._state == State.Online );
-
         if( this._state != State.Online )
             return Promise.reject( "offline" );
 
@@ -1061,28 +1059,28 @@ export class DukDbgProtocol extends EE.EventEmitter
 
                     this._protoVersion = verBuffer.toString( "utf8" );
                     this.log( "Protocol: " + this._protoVersion );
-                    
+
                 // TODO: Verify protocol version
 
                     // Now request the target's info to finalize attach step
                     this.log( "Requesting target info..." );
-                    
+
                     // Switch the state real quick, since this call is protected... hacky...
                     this._state = State.Online;
                     this.requestBasicInfo().then( ( r:DukBasicInfoResponse ) => {
-                    
+
                         // Save basic info
                         this.info = r;
                         this.log( `${r.version} ${r.gitDesc} ${r.targetInfo} ${DukEndianness[r.endianness]}` );
-                        
+
                         // Emit attached
                         this._state = State.Online;
                         this.emit( DukEvent[DukEvent.attached], true );
-                        
+
                     }).catch( ( err ) => {
                         this.disconnect( `Error obtaining basic info: ${String(err)}` );
                     });
-                    
+
                     // Restore state
                     this._state = State.Verification;
 
@@ -1093,7 +1091,7 @@ export class DukDbgProtocol extends EE.EventEmitter
 
         if( !this._protoVersion )
             return;     // Still waiting for protocol version or target info
-        
+
 
         // Attempt to frame a message
         this.readMessages();
@@ -1127,7 +1125,7 @@ export class DukDbgProtocol extends EE.EventEmitter
 
             let lopart = 0, hipart = 0;
 
-            // Pointers are stored in the byte order 
+            // Pointers are stored in the byte order
             // of the client, to facilitate inspection.
 
             if( size == 4 )
@@ -1674,7 +1672,7 @@ export class DukDbgProtocol extends EE.EventEmitter
     {
         let cp = new Array( len );
 
-        // TODO@Harold : I think this reads only ascii characters, since its 
+        // TODO@Harold : I think this reads only ascii characters, since its
         // treating each byte as a code point. Need to make it properly
 
         ///*
