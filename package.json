@@ -73,6 +73,16 @@
 								"type": "string",
 								"description": "Absolute path to a source root.",
 								"default": "${workspaceRoot}"
+							},
+							"host": {
+								"type": "string",
+								"description": "Address of host running the script engine.",
+								"default": "localhost"
+							},
+							"port": {
+								"type": "number",
+								"description": "Port on which the script engine is listening.",
+								"default": 9091
 							}
 						}
 					}

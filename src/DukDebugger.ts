@@ -52,6 +52,10 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
 	stopOnEntry?: boolean;
 	/** VS Code's root directory. */
 	localRoot?: string;
+	/** Address of host running the script engine. */
+	host?: string;
+	/** Port on which the script engine is listening. */
+	port?: number;
 }
 
 // Utitity
@@ -317,7 +321,7 @@ class DukDebugSession extends DebugSession
     //-----------------------------------------------------------
     // Begin initialization. Attempt to connect to target
     //-----------------------------------------------------------
-    private beginInit( response:DebugProtocol.Response ) : void
+    private beginInit( response:DebugProtocol.Response, host:string, port:number ) : void
     {
         this._initialStatus         = null;
         this._awaitingInitialStatus = false;
@@ -337,7 +341,7 @@ class DukDebugSession extends DebugSession
             }
         });
 
-        this._dukProto.attach( "127.0.0.1", 9091 );
+        this._dukProto.attach( host, port );
     }
 
     //-----------------------------------------------------------
@@ -395,7 +399,7 @@ class DukDebugSession extends DebugSession
         this._args          = args;
         this._sourceRoot    = this.normPath( args.localRoot );
 
-        this.beginInit( response );
+        this.beginInit( response, args.host || "127.0.0.1", args.port || 9091 );
 	}
 
     //-----------------------------------------------------------
@@ -406,7 +410,7 @@ class DukDebugSession extends DebugSession
         this._args          = args;
         this._sourceRoot    = this.normPath( args.localRoot );
 
-        this.beginInit( response );
+        this.beginInit( response, args.host || "127.0.0.1", args.port || 9091 );
     }
 
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void
