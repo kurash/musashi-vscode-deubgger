@@ -349,6 +349,25 @@ export class DukEvalResponse extends DukResponse
     }
 }
 
+export class DukAppRequestResponse extends DukResponse
+{
+    public result  :Duk.DValueUnion[];
+
+    constructor( msg:DukDvalueMsg )
+    {
+        super( Duk.CmdType.APPREQUEST );
+
+        if( msg.length < 2 )
+            throw new Error( "Invalid 'AppRequest' response message." );
+
+        this.result = [];
+
+        let len = msg.length - 2;
+        for( let i = 1; i <= len; i++ )
+            this.result.push(msg[i].value);
+    }
+}
+
 export class DukInspectHeapObjResponse extends DukResponse
 {
     public properties:Duk.Property[];
@@ -914,6 +933,23 @@ export class DukDbgProtocol extends EE.EventEmitter
         this._outBuf.writeInt( Duk.CmdType.EVAL );
         this._outBuf.writeString( expression );
         this._outBuf.writeInt( stackLevel );
+        this._outBuf.writeEOM();
+
+        return this.sendRequest( Duk.CmdType.EVAL, this._outBuf.finish() );
+    }
+
+    //-----------------------------------------------------------
+    public requestAppRequest( command:string, args?:Duk.TValueUnion[] ) : Promise<any>
+    {
+        this._outBuf.clear();
+        this._outBuf.writeREQ();
+        this._outBuf.writeInt( Duk.CmdType.APPREQUEST );
+       	this._outBuf.writeString(command);
+        if (args) {
+            for (var i = 0; i < args.length; i++) {
+        	    this._outBuf.writeString(args[i].toString());
+            }
+        }
         this._outBuf.writeEOM();
 
         return this.sendRequest( Duk.CmdType.EVAL, this._outBuf.finish() );
@@ -1623,6 +1659,10 @@ export class DukDbgProtocol extends EE.EventEmitter
 
                     case Duk.CmdType.GETBYTECODE    :
                         throw new Error( "Unimplemented" );
+                    break;
+
+                    case Duk.CmdType.APPREQUEST :
+                        value = new DukAppRequestResponse( msg );
                     break;
 
                     case Duk.CmdType.INSPECTHEAPOBJ :
